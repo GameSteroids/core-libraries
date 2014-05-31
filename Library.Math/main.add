@@ -1,0 +1,118 @@
+class 'Vector' -- {
+    function Vector:__init(...)
+        self.coords = {...}
+    end
+
+    function Vector:dimension()
+        return #self.coords
+    end
+
+    function Vector:length()
+        local result = 0
+        for i = 1, self:dimension() do
+            result = result + self.coords[i] * self.coords[i]
+        end
+
+        return math.sqrt(result)
+    end
+
+    function Vector:normalized()
+        local length = self:length()
+
+        local result = {}
+        for i = 1, self:dimension() do
+            table.insert(result, self.coords[i] / length)
+        end
+
+        return Vector(unpack(result))
+    end
+
+    function Vector:__eq(other)
+        assert(type(self) == type(other), 'trying to compare a ' .. type(other) .. ' with a ' .. type(self))
+        assert(self:dimension() == other:dimension(), 'trying to compare Vector\'s with different dimension')
+
+        for i = 1, self:dimension() do
+            if self.coords[i] ~= other.coords[i] then
+                return false
+            end
+        end
+
+        return true
+    end
+
+    function Vector:__unm()
+        local result = {}
+        for i = 1, self:dimension() do
+            table.insert(result, -self.coords[i])
+        end
+
+        return Vector(unpack(result))
+    end
+
+    function Vector:__sub(other)
+        assert(type(self) == type(other), 'trying to subsctract a ' .. type(other) .. ' from a ' .. type(self))
+        assert(self:dimension() == other:dimension(), 'trying to subsctract Vector\'s with different dimension')
+
+        local result = {}
+        for i = 1, self:dimension() do
+            table.insert(result, self.coords[i] - other.coords[i])
+        end
+
+        return Vector(unpack(result))
+    end
+
+    function Vector:__add(other)
+        assert(type(self) == type(other), 'trying to add a ' .. type(other) .. ' to a ' .. type(self))
+        assert(self:dimension() == other:dimension(), 'trying to substract Vector\'s with different dimension')
+
+        local result = {}
+        for i = 1, self:dimension() do
+            table.insert(result, self.coords[i] + other.coords[i])
+        end
+
+        return Vector(unpack(result))
+    end
+
+    function Vector:__mul(other)
+        if type(other) == 'number' then
+            local result = {}
+            for i = 1, self:dimension() do
+                table.insert(result, self.coords[i] * other)
+            end
+
+            return Vector(unpack(result))
+        elseif type(self) == type(other) then
+            assert(self:dimension() == other:dimension(), 'trying to multiply Vector\'s with different dimension')
+
+            local result = 0
+            for i = 1, self:dimension() do
+                result = result + self.coords[i] * other.coords[i]
+            end
+
+            return result
+        else
+            error('trying to multiply a ' .. self.type() .. ' with a ' .. type(other))
+        end
+    end
+
+    function Vector:__div(other)
+        if type(other) == 'number' then
+            local result = {}
+            for i = 1, self:dimension() do
+                table.insert(result, self.coords[i] / other)
+            end
+
+            return Vector(unpack(result))
+        else
+            error('trying to divide a ' .. self.type() .. ' by a ' .. type(other))
+        end
+    end
+
+    function Vector:__tostring()
+        return 'Vector(' .. table.concat(self.coords, ', ') .. ')'
+    end
+-- }
+
+namespace 'math' {
+    Vector = Vector
+}
