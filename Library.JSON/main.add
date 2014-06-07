@@ -16,7 +16,6 @@
 local VERSION = 20140418.11  -- version history at end of file
 local OBJDEF = { VERSION = VERSION }
 
-
 --
 -- Simple JSON encoding and decoding in pure Lua.
 -- http://www.json.org/
@@ -100,11 +99,11 @@ local OBJDEF = { VERSION = VERSION }
 --            :
 --
 --          for i, photo in ipairs(photosToProcess) do
---               :             
---               :             
+--               :
+--               :
 --               local data = JSON:decode(someJsonText, { photo = photo })
---               :             
---               :             
+--               :
+--               :
 --          end
 --
 --
@@ -147,7 +146,7 @@ local OBJDEF = { VERSION = VERSION }
 --   key exists (or when non-positive numeric keys exist), numeric keys are converted
 --   to strings.
 --
---   For example, 
+--   For example,
 --     JSON:encode({ "one", "two", "three", SOMESTRING = "some string" }))
 --   produces the JSON object
 --     {"1":"one","2":"two","3":"three","SOMESTRING":"some string"}
@@ -836,7 +835,7 @@ function OBJDEF:new(args)
    return setmetatable(new, OBJDEF)
 end
 
-_G.JSON = OBJDEF:new()()
+_G.JSON = OBJDEF:new()
 
 --
 -- Version history:
@@ -873,7 +872,7 @@ _G.JSON = OBJDEF:new()()
 --
 --                 To maintain the prior throw-an-error semantics, set
 --                      JSON.noKeyConversion = true
---                 
+--
 --   20131004.7    Release under a Creative Commons CC-BY license, which I should have done from day one, sorry.
 --
 --   20130120.6    Comment update: added a link to the specific page on my blog where this code can

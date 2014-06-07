@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest>
     <id>fec83c13f72628347f965d4980a738a7</id>
+    <icon>/resource/cloudrop.gui/images/drop.png</icon>
     <name>JSON</name>
     <type>LIBRARY</type>
     <version>1.0.0</version>
