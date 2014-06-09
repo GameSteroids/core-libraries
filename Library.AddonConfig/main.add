@@ -13,7 +13,11 @@ class 'Menu' -- {
         for k, v in ipairs(childElements) do
             v._parent = self
 
-            self._value[v:id()] = v:value()
+            local id = v:id()
+
+            if id then
+                self._value[v:id()] = v:value()
+            end
         end
 
         return self
@@ -39,6 +43,23 @@ class 'Menu' -- {
 
     function Menu:value()
         return self._value
+    end
+-- }
+
+class 'Separator' -- {
+    function Separator:__init()
+    end
+
+    function Separator:render()
+        return '-'
+    end
+
+    function Separator:id()
+        return nil
+    end
+
+    function Separator:value()
+        return nil
     end
 -- }
 
@@ -136,7 +157,8 @@ function Create(subMenuCaption)
     local values = {
         Menu = Menu,
         Boolean = Boolean,
-        Number = Number
+        Number = Number,
+        Separator = Separator
     }
 
     Callback.Bind('Unload', function()
@@ -168,5 +190,6 @@ namespace 'AddonConfig' {
     Create = Create,
     Menu = Menu,
     Boolean = Boolean,
-    Number = Number
+    Number = Number,
+    Separator = Separator
 }
