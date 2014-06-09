@@ -70,7 +70,7 @@ class 'Section' -- {
     end
 
     function Section:render()
-        local renderResult = '-';
+        local renderResult = '<div style="margin-top:2px;color:#ffffff;position:relative;z-Index:1;top:10px;font-size:8px;text-align:center;font-family:Silkscreen"><span style="display:inline-block;background-color:#111111">' .. self._caption .. '</span></div></li><li>-';
 
         for k, v in ipairs(self._children) do
             if type(v) == 'userdata' then
