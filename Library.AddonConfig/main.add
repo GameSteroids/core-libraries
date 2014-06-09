@@ -108,26 +108,28 @@ class 'Number' -- {
 -- }
 
 Callback.Bind('WebInit', function()
-    LUA = WebView.CreateJSObject('LUA')
-    LUA['Game.Chat.Print'] = function(params)
-        Game.Chat.Print(params[1])
-    end
-    LUA['Game.AllowKeyInput'] = function(params)
-        Game.AllowKeyInput(params[1])
-    end
-    LUA['print'] = function(params)
-        print(params[1])
-    end
+    if #subMenus >= 1 then
+        LUA = WebView.CreateJSObject('LUA')
+        LUA['Game.Chat.Print'] = function(params)
+            Game.Chat.Print(params[1])
+        end
+        LUA['Game.AllowKeyInput'] = function(params)
+            Game.AllowKeyInput(params[1])
+        end
+        LUA['print'] = function(params)
+            print(params[1])
+        end
 
-    local result = Utility.ReadFile(path .. 'menu.html') .. '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
+        local result = Utility.ReadFile(path .. 'menu.html') .. '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
 
-    for k, v in ipairs(subMenus) do
-        result = result .. '<li>' .. v:render() .. '</li>'
+        for k, v in ipairs(subMenus) do
+            result = result .. '<li>' .. v:render() .. '</li>'
+        end
+
+        result = result .. '</ul></li></ul>'
+
+        WebView.jQuery('#mainDiv'):html(result)
     end
-
-    result = result .. '</ul></li></ul>'
-
-    WebView.jQuery('#mainDiv'):html(result)
 end)
 
 function Create(subMenuCaption)
