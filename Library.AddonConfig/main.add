@@ -26,7 +26,7 @@ class 'Menu' -- {
     function Menu:render()
         local renderResult = '<a href="#" style="border-radius:0px;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>' .. self._caption .. '</a><ul>';
 
-        for k,v in ipairs(self._children) do
+        for k, v in ipairs(self._children) do
             if type(v) == 'userdata' then
                 renderResult = renderResult .. '<li>' .. v:render() .. '</li>'
             end
@@ -42,6 +42,50 @@ class 'Menu' -- {
     end
 
     function Menu:value()
+        return self._value
+    end
+-- }
+
+class 'Section' -- {
+    function Section:__init(caption)
+        self._caption = caption
+        self._children = {}
+        self._value = {}
+    end
+
+    function Section:__call(childElements)
+        self._children = childElements
+
+        for k, v in ipairs(childElements) do
+            v._parent = self
+
+            local id = v:id()
+
+            if id then
+                self._value[v:id()] = v:value()
+            end
+        end
+
+        return self
+    end
+
+    function Section:render()
+        local renderResult = '-</li><li>';
+
+        for k, v in ipairs(self._children) do
+            if type(v) == 'userdata' then
+                renderResult = renderResult .. '<li>' .. v:render() .. '</li>'
+            end
+        end
+
+        return renderResult
+    end
+
+    function Section:id()
+        return string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+    end
+
+    function Section:value()
         return self._value
     end
 -- }
@@ -158,7 +202,8 @@ function Create(subMenuCaption)
         Menu = Menu,
         Boolean = Boolean,
         Number = Number,
-        Separator = Separator
+        Separator = Separator,
+        Section = Section
     }
 
     Callback.Bind('Unload', function()
@@ -191,5 +236,6 @@ namespace 'AddonConfig' {
     Menu = Menu,
     Boolean = Boolean,
     Number = Number,
-    Separator = Separator
+    Separator = Separator,
+    Section = Section
 }
