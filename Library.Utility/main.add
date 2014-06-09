@@ -14,7 +14,7 @@
     else
         return math.huge
     end
-end]]
+end
 
 Game.Unit.hasSpell = function(self, spellName)
     for i, slot in ipairs({Game.Slots.Spell1, Game.Slots.Summoner1, Game.Slots.Summoner2}) do
@@ -38,7 +38,7 @@ Game.Unit.hpBarData = function(self)
     else
         return math.floor(barPos.x - 32), math.floor(barPos.y), 62, 3
     end
-end
+end]]
 
 -- UTILITY NAMESPACE ==========================================================
 
