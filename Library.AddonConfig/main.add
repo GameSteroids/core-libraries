@@ -70,11 +70,11 @@ class 'Section' -- {
     end
 
     function Section:render()
-        local renderResult = '-</li><li>';
+        local renderResult = '-';
 
         for k, v in ipairs(self._children) do
             if type(v) == 'userdata' then
-                renderResult = renderResult .. '<li>' .. v:render() .. '</li>'
+                renderResult = renderResult .. '</li><li>' .. v:render()
             end
         end
 
