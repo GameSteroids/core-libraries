@@ -1,0 +1,109 @@
+--[[Game.Unit.distance = function(self, other1, other2)
+    if self.valid then
+        local other1Type, other2Type = type(other1), type(other2)
+
+        if other1Type == 'Unit' then
+            return self:distance(math.Vector(other1.pos.x, other1.pos.z))
+        elseif other1Type == 'number' and other2Type == 'number' then
+            return self:distance(math.Vector(other1, other2))
+        elseif other1Type == 'Vector' then
+            return (math.Vector(self.pos.x, self.pos.z) - other1):length()
+        else
+            error('invalid parameters passed to distance - expecting:\nUnit:distance(number, number)\nUnit:distance(Unit)\nUnit:distance(Vector<2d>)')
+        end
+    else
+        return math.huge
+    end
+end]]
+
+Game.Unit.hasSpell = function(self, spellName)
+    for i, slot in ipairs({Game.Slots.Spell1, Game.Slots.Summoner1, Game.Slots.Summoner2}) do
+        local spellData = self:GetSpellData(slot)
+
+        if spellData and spellData.name:find(spellName) then
+            return slot, spellData
+        end
+    end
+end
+
+Game.Unit.hpBarData = function(self)
+    local barPos = Game.GetUnitHPBarPos(self)
+
+    if self.charName == 'Dragon' then
+        return math.floor(barPos.x - 63), math.floor(barPos.y - 7), 124, 3
+    elseif self.charName == 'Worm' then
+        return math.floor(barPos.x - 63), math.floor(barPos.y), 124, 3
+    elseif self.charName == 'TT_Spiderboss' then
+        return math.floor(barPos.x - 63), math.floor(barPos.y), 124, 3
+    else
+        return math.floor(barPos.x - 32), math.floor(barPos.y), 62, 3
+    end
+end
+
+-- UTILITY NAMESPACE ==========================================================
+
+local delayedActions = {}
+
+Callback.Bind('Tick', function()
+    for t, funcs in pairs(delayedActions) do
+        if t <= Core.GetTickCount() then
+            for _, f in ipairs(funcs) do f.func(unpack(f.args or {})) end
+            delayedActions[t] = nil
+        end
+    end
+end)
+
+DelayAction = function(func, delay, args)
+    local t = Core.GetTickCount() + (delay or 0)
+
+    if not delayedActions[t] then
+        delayedActions[t] = {}
+    end
+
+    table.insert(delayedActions[t], {func = func, args = args})
+end
+
+namespace 'Utility' {
+    DelayAction = DelayAction
+}
+
+-- TABLE NAMESPACE ============================================================
+
+function MergeTables(t1, t2)
+    for k, v in pairs(t2) do
+        if type(v) == 'table' then
+            if type(t1[k]) == 'table' then
+                MergeTables(t1[k], v)
+            else
+                t1[k] = v
+            end
+        else
+            t1[k] = v
+        end
+    end
+
+    return t1
+end
+
+namespace 'table' {
+    merge = MergeTables
+}
+
+-- WEBVIEW NAMESPACE ==========================================================
+
+function JSClosure(func)
+    if not functionIndex then
+        functionIndex = WebView.CreateJSObject('functionIndex')
+        functionIndex.lastFunction = 0
+    end
+
+    functionIndex.lastFunction = functionIndex.lastFunction + 1
+
+    functionIndex['closure' .. functionIndex.lastFunction] = func
+
+    return 'functionIndex.closure' .. functionIndex.lastFunction .. ''
+end
+
+namespace 'WebView' {
+    JSClosure = JSClosure
+}

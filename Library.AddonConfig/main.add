@@ -1,0 +1,170 @@
+local subMenus = {}
+
+class 'Menu' -- {
+    function Menu:__init(caption)
+        self._caption = caption
+        self._children = {}
+        self._value = {}
+    end
+
+    function Menu:__call(childElements)
+        self._children = childElements
+
+        for k, v in ipairs(childElements) do
+            v._parent = self
+
+            self._value[v:id()] = v:value()
+        end
+
+        return self
+    end
+
+    function Menu:render()
+        local renderResult = '<a href="#" style="border-radius:0px;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>' .. self._caption .. '</a><ul>';
+
+        for k,v in ipairs(self._children) do
+            if type(v) == 'userdata' then
+                renderResult = renderResult .. '<li>' .. v:render() .. '</li>'
+            end
+        end
+
+        renderResult = renderResult .. '</ul>'
+
+        return renderResult
+    end
+
+    function Menu:id()
+        return string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+    end
+
+    function Menu:value()
+        return self._value
+    end
+-- }
+
+class 'Boolean' -- {
+    function Boolean:__init(caption, defaultValue, callback)
+        self._caption = caption
+        self._defaultValue = defaultValue == nil and true or defaultValue
+        self._callback = callback
+    end
+
+    function Boolean:render()
+        return '<a href="#" class="addonConfigBoolean" onclick="' .. WebView.JSClosure(function()
+            self._parent._value[self:id()] = not self._parent._value[self:id()]
+
+            if self._callback then
+                self._callback(self._parent._value[self:id()])
+            end
+        end) .. '();"><i class="ui-icon fa fa-check" style="' .. (self:value() and 'opacity:1;' or '') ..  '"></i>' .. self._caption .. '</a>'
+    end
+
+    function Boolean:id()
+        return string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+    end
+
+    function Boolean:value()
+        local currentValue = self._parent._value[self:id()]
+
+        return currentValue == nil and self._defaultValue or currentValue
+    end
+-- }
+
+class 'Number' -- {
+    function Number:__init(caption, defaultValue, callback)
+        self._caption = caption
+        self._defaultValue = defaultValue
+        self._callback = callback
+    end
+
+    function Number:render()
+        return '<a href="#" class="addonConfigNumber">' ..
+                   '<i class="ui-icon fa fa-pencil"></i>' ..
+                   '<span class="caption">' ..
+                      self._caption .. ': ' ..
+                      '<span class="currentValue">' ..
+                          '<span class="rVal">' .. self:value() .. '</span>' ..
+                          '<input type=text onchange="' .. WebView.JSClosure(function(params)
+                              self._parent._value[self:id()] = params[1]
+
+                              if self._callback then
+                                  self._callback(self._parent._value[self:id()])
+                              end
+                          end) .. '($(this).val());" style="visibility:hidden;position:absolute;top:0px;left:1px;width:100%;margin:0px;display:block;outline:0px;background-color:transparent;color:#ffffff;border:none" value="' .. self:value() .. '" />' ..
+                      '</span>' ..
+                   '</span>' ..
+               '</a>'
+    end
+
+    function Number:id()
+        return string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+    end
+
+    function Number:value()
+        local currentValue = self._parent._value[self:id()]
+
+        return currentValue == nil and self._defaultValue or currentValue
+    end
+-- }
+
+Callback.Bind('WebInit', function()
+    LUA = WebView.CreateJSObject('LUA')
+    LUA['Game.Chat.Print'] = function(params)
+        Game.Chat.Print(params[1])
+    end
+    LUA['Game.AllowKeyInput'] = function(params)
+        Game.AllowKeyInput(params[1])
+    end
+    LUA['print'] = function(params)
+        print(params[1])
+    end
+
+    local result = Utility.ReadFile(path .. 'menu.html') .. '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
+
+    for k, v in ipairs(subMenus) do
+        result = result .. '<li>' .. v:render() .. '</li>'
+    end
+
+    result = result .. '</ul></li></ul>'
+
+    WebView.jQuery('#mainDiv'):html(result)
+end)
+
+function Create(subMenuCaption)
+    local values = {
+        Menu = Menu,
+        Boolean = Boolean,
+        Number = Number
+    }
+
+    Callback.Bind('Unload', function()
+        Utility.WriteFile(path .. subMenuCaption .. '.cfg', JSON:encode(values))
+    end)
+
+    return setmetatable({}, {
+        __call = function(t, children)
+            local menu = Menu(subMenuCaption)(children)
+
+            table.insert(subMenus, menu)
+
+            if Utility.FileExists(path .. subMenuCaption .. '.cfg') then
+                values = table.merge(menu:value(), JSON:decode(Utility.ReadFile(path .. subMenuCaption .. '.cfg')))
+            else
+                values = menu:value()
+            end
+
+            return t
+        end,
+
+        __index = function(t, name)
+            return values[name]
+        end
+    })
+end
+
+namespace 'AddonConfig' {
+    Create = Create,
+    Menu = Menu,
+    Boolean = Boolean,
+    Number = Number
+}

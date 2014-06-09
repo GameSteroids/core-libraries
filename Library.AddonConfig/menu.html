@@ -1,0 +1,175 @@
+<script type="text/javascript">
+    $(function() {
+        $(document).disableSelection();
+
+        $( "#menu" ).menu({
+            select: function(e, ui) {
+                $("#menu").menu("focus", e, ui.item);
+            },
+            blur: function(event, ui) {
+                LUA['Game.AllowKeyInput'](true);
+            },
+            focus: function(event, ui) {
+                LUA['Game.AllowKeyInput'](false);
+            },
+            position: {
+                my: "left top",
+                at: "right+7 top-6"
+            }
+        });
+
+        $(document).on({
+            click: function() {
+                if(jQuery(this).find('.ui-icon').css('opacity') == '1') {
+                    jQuery(this).find('.ui-icon').css('opacity', '');
+                } else {
+                    jQuery(this).find('.ui-icon').css('opacity', '1');
+                }
+            }
+        }, '.addonConfigBoolean');
+
+        $(document).on({
+            click: function() {
+                if($(this).find('.ui-icon').css('opacity') == '1') {
+                    $(this).find('input').blur();
+                } else {
+                    $(this).find('.ui-icon').css('opacity', '1');
+                    $(this).find('input').val($(this).find('.rVal').css('visibility', 'hidden').text()).css('visibility', '').focus();
+                }
+            }
+        }, '.addonConfigNumber');
+
+        $(document).on({
+            blur: function() {
+                $(this).closest('.addonConfigNumber').find('.ui-icon').css('opacity', '');
+                var parent = $(this).css('visibility', 'hidden').parent();
+                parent.find('.rVal').css('visibility', '').html('' + parseFloat($(this).val()) + '');
+            },
+            keyup: function(e) {
+                var code = e.keyCode || e.which;
+
+                if(code == 13) {
+                    $(this).blur();
+                }
+            },
+            input: function() {
+                $(this).parent().find('.rVal').html('' + parseFloat($(this).val()) + '');
+            },
+            keydown: function (e) {
+                // Allow: backspace, delete, tab, escape, enter and .
+                if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
+                     // Allow: Ctrl+A
+                    (e.keyCode == 65 && e.ctrlKey === true) ||
+                     // Allow: home, end, left, right
+                    (e.keyCode >= 35 && e.keyCode <= 39)) {
+                         // let it happen, don't do anything
+                         return;
+                }
+                // Ensure that it is a number and stop the keypress
+                if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
+                    e.preventDefault();
+                }
+            }
+        }, '.addonConfigNumber input');
+    });
+</script>
+
+<style type="text/css">
+    .addonConfigNumber .fa, .addonConfigBoolean .fa {
+        opacity:0;
+    }
+
+    .addonConfigNumber:hover .fa-pencil, .addonConfigBoolean:hover .fa {
+        opacity:0.3;
+    }
+
+    body {
+        font-size:10px;
+    }
+
+    .ui-menu {
+            position:absolute;
+            border:5px solid rgba(0,0,0,0.4);
+            background:none;
+            white-space: nowrap;
+    }
+
+    .ui-menu:before {
+        content:'';
+        top:0px;
+        position:absolute;
+        width:100%;
+        height:100%;
+        left:0px;
+        background:rgba(0,0,0,0.7);
+    }
+
+    .caption {
+        display:block;
+        position:relative;
+    }
+
+    .currentValue {
+        display:inline-block;
+        position:relative;
+    }
+
+    .ui-widget-content {
+        top:10px;
+        left:10px;
+    }
+
+    .ui-widget-content a {
+        border-radius:0px;
+        color:rgba(255,255,255,1);
+    }
+
+    .ui-state-hover,
+    .ui-widget-content .ui-state-hover,
+    .ui-widget-header .ui-state-hover,
+    .ui-state-focus,
+    .ui-widget-content .ui-state-focus,
+    .ui-widget-header .ui-state-focus {
+        border: 1px solid transparent;
+        background: rgba(0, 0, 0, 1);
+        font-weight: normal;
+        color: #ffffff;
+    }
+
+    .ui-state-active,
+    .ui-widget-content .ui-state-active,
+    .ui-widget-header .ui-state-active {
+        border: 1px solid transparent;
+        background: rgba(0, 0, 0, 1);
+        font-weight: normal;
+        color: #ffffff;
+    }
+
+    .ui-icon, .ui-widget-content .ui-icon-carat-1-e {
+        background:none;
+        display: inline-block;
+        font-family: FontAwesome;
+        font-style: normal;
+        font-weight: normal;
+        line-height: 1;
+        -webkit-font-smoothing: antialiased;
+        text-indent: 0px;
+    }
+
+    .ui-icon-carat-1-e:before {
+        content: "\f054";
+        position:relative;
+        top:4px;
+        left:7px;
+    }
+
+    .ui-icon, .ui-widget-content .ui-icon {
+        background:none;
+    }
+
+    #menu i.ui-icon {
+            position:absolute;
+            top:5px;
+            left:5px;
+    }
+</style>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+    <id>985ba2607563d86192d0978e747a2e2e</id>
+    <icon>/resource/cloudrop.gui/images/drop.png</icon>
+    <name>Library.AddonConfig</name>
+    <type>LIBRARY</type>
+    <version>1.0.0</version>
+    <author>Husk0r</author>
+    <description></description>
+    <requirements></requirements>
+</manifest>
