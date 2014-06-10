@@ -70,7 +70,7 @@ class 'Section' -- {
     end
 
     function Section:render()
-        local renderResult = '<div style="margin-top:2px;color:#ffffff;position:relative;z-Index:1;top:10px;font-size:8px;text-align:center;font-family:Silkscreen"><span style="display:inline-block;background-color:#111111">' .. self._caption .. '</span></div></li><li>-';
+        local renderResult = '<div style="margin-top:2px;color:#ffffff;position:relative;z-Index:1;top:10px;font-size:8px;font-family:Silkscreen;text-align:center"><span style="display:inline-block;background-color:#111111;padding-left:1px;padding-right:1px;">' .. self._caption .. '</span></div></li><li class="section">-';
 
         for k, v in ipairs(self._children) do
             if type(v) == 'userdata' then
@@ -172,6 +172,43 @@ class 'Number' -- {
     end
 -- }
 
+class 'KeyBinding' -- {
+    function KeyBinding:__init(caption, defaultValue, callback)
+        self._caption = caption
+        self._defaultValue = defaultValue
+        self._callback = callback
+    end
+
+    function KeyBinding:render()
+        return '<a href="#" class="addonConfigKeyBinding">' ..
+                   '<i class="ui-icon fa fa-keyboard-o"></i>' ..
+                   '<span class="caption">' ..
+                      self._caption .. ': ' ..
+                      '<span class="currentValue">' ..
+                          '<span class="rVal">' .. (type(self:value()) == 'number' and string.char(82) or '83') .. '</span>' ..
+                          '<input type=text onchange="' .. WebView.JSClosure(function(params)
+                              self._parent._value[self:id()] = params[1]
+
+                              if self._callback then
+                                  self._callback(self._parent._value[self:id()])
+                              end
+                          end) .. '($(this).val());" style="visibility:hidden;position:absolute;top:0px;left:1px;width:100%;margin:0px;display:block;outline:0px;background-color:transparent;color:#ffffff;border:none" value="' .. self:value() .. '" />' ..
+                      '</span>' ..
+                   '</span>' ..
+               '</a>'
+    end
+
+    function KeyBinding:id()
+        return string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+    end
+
+    function KeyBinding:value()
+        local currentValue = self._parent._value[self:id()]
+
+        return currentValue == nil and self._defaultValue or currentValue
+    end
+-- }
+
 Callback.Bind('WebInit', function()
     if #subMenus >= 1 then
         LUA = WebView.CreateJSObject('LUA')
@@ -203,7 +240,8 @@ function Create(subMenuCaption)
         Boolean = Boolean,
         Number = Number,
         Separator = Separator,
-        Section = Section
+        Section = Section,
+        KeyBinding = KeyBinding
     }
 
     Callback.Bind('Unload', function()
@@ -237,5 +275,6 @@ namespace 'AddonConfig' {
     Boolean = Boolean,
     Number = Number,
     Separator = Separator,
-    Section = Section
+    Section = Section,
+    KeyBinding = KeyBinding
 }
