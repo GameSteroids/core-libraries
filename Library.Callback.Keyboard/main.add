@@ -1,0 +1,80 @@
+local Callback_Bind = Callback.Bind
+
+local keyBindings = {
+    KeyDown = {},
+    KeyUp = {},
+    KeyPress = {}
+}
+
+Callback.Bind = function(callbackName, callbackFunction, callbackModifier)
+    if callbackModifier then
+        local bindingTable = keyBindings[callbackName]
+
+        if bindingTable then
+            bindingTable[#bindingTable+1] = {keys = Keyboard.StringToKeyCodes(callbackFunction), stringKeys = string.upper(callbackFunction), func = callbackModifier}
+        end
+    else
+        Callback_Bind(callbackName, callbackFunction)
+    end
+end
+
+-- ACTUAL HANDLER =============================================================
+
+local keyDown = {}
+
+function TriggerKeyCallbacks(callbacksTable, key)
+        -- check potential keybindings
+    for k, keyBinding in ipairs(callbacksTable) do
+        -- only if current key is part of the binding
+        if keyBinding.keys[key] then
+            -- check if all keys of the combo are found
+            local allKeysFound = true
+            for num, expectedKey in pairs(keyBinding.keys) do
+                if not keyDown[expectedKey] then
+                    allKeysFound = false
+                    break
+                end
+            end
+            if allKeysFound then
+                keyBinding.func(keyBinding.stringKeys)
+            end
+        end
+    end
+end
+
+Callback_Bind('WndMsg', function(msg, key)
+    if msg == 256 then
+        -- only trigger when key is downed the first time
+        if not keyDown[key] then
+            -- trigger generic KeyDown events
+            Callback.Trigger('KeyDown', key)
+
+            -- remember the key is down
+            keyDown[key] = key
+
+            -- trigger specific KeyDown events
+            if #keyBindings.KeyDown >= 1 then
+                TriggerKeyCallbacks(keyBindings.KeyDown, key)
+            end
+        end
+
+        -- trigger generic KeyPress events
+        Callback.Trigger('KeyPress', key)
+
+        -- trigger specific KeyPress events
+        if #keyBindings.KeyDown >= 1 then
+            TriggerKeyCallbacks(keyBindings.KeyPress, key)
+        end
+    elseif msg == 257 then
+        -- trigger generic KeyUp events
+        Callback.Trigger('KeyUp', key)
+
+        -- trigger specific KeyUp events
+        if #keyBindings.KeyUp >= 1 then
+            TriggerKeyCallbacks(keyBindings.KeyUp, key)
+        end
+
+        -- remember the key is up
+        keyDown[key] = nil
+    end
+end)

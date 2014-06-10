@@ -2,15 +2,24 @@
     $(function() {
         $(document).disableSelection();
 
+        //var blocked = false;
+        //setInterval(function() {
+            //console.log('a');
+//
+            //blocked = !blocked;
+//
+            //LUA['Game.AllowKeyInput'](blocked);
+        //}, 10);
+
         $( "#menu" ).menu({
             select: function(e, ui) {
                 $("#menu").menu("focus", e, ui.item);
             },
             blur: function(event, ui) {
-                LUA['Game.AllowKeyInput'](true);
+                //LUA['Game.AllowKeyInput'](true);
             },
             focus: function(event, ui) {
-                LUA['Game.AllowKeyInput'](false);
+                //LUA['Game.AllowKeyInput'](false);
             },
             position: {
                 my: "left top",

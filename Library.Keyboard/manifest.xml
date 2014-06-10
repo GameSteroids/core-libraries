@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest>
+    <id>547f8695135d33f866f23a4310ed87a8</id>
+    <icon>/resource/cloudrop.gui/images/drop.png</icon>
+    <name>Library.Keyboard</name>
+    <type>LIBRARY</type>
+    <version>1.0.0</version>
+    <author>Husk0r</author>
+    <description></description>
+    <requirements></requirements>
+</manifest>
