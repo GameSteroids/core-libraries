@@ -1,25 +1,120 @@
 <script type="text/javascript">
+    var keyName = {};
+
+    keyName[8] = 'BACKSPACE';
+    keyName[9] = 'TAB';
+    keyName[13] = 'ENTER';
+    keyName[16] = 'SHIFT';
+    keyName[17] = 'CTRL';
+    keyName[18] = 'ALT';
+    keyName[19] = 'PAUSE';
+    keyName[20] = 'CAPS_LOCK';
+    keyName[27] = 'ESCAPE';
+    keyName[32] = 'SPACE';
+    keyName[33] = 'PAGE_UP';
+    keyName[34] = 'PAGE_DOWN';
+    keyName[35] = 'END';
+    keyName[36] = 'HOME';
+    keyName[37] = 'LEFT_ARROW';
+    keyName[38] = 'UP_ARROW';
+    keyName[39] = 'RIGHT_ARROW';
+    keyName[40] = 'DOWN_ARROW';
+    keyName[45] = 'INSERT';
+    keyName[46] = 'DELETE';
+    keyName[48] = '0';
+    keyName[49] = '1';
+    keyName[50] = '2';
+    keyName[51] = '3';
+    keyName[52] = '4';
+    keyName[53] = '5';
+    keyName[54] = '6';
+    keyName[55] = '7';
+    keyName[56] = '8';
+    keyName[57] = '9';
+    keyName[65] = 'A';
+    keyName[66] = 'B';
+    keyName[67] = 'C';
+    keyName[68] = 'D';
+    keyName[69] = 'E';
+    keyName[70] = 'F';
+    keyName[71] = 'G';
+    keyName[72] = 'H';
+    keyName[73] = 'I';
+    keyName[74] = 'J';
+    keyName[75] = 'K';
+    keyName[76] = 'L';
+    keyName[77] = 'M';
+    keyName[78] = 'N';
+    keyName[79] = 'O';
+    keyName[80] = 'P';
+    keyName[81] = 'Q';
+    keyName[82] = 'R';
+    keyName[83] = 'S';
+    keyName[84] = 'T';
+    keyName[85] = 'U';
+    keyName[86] = 'V';
+    keyName[87] = 'W';
+    keyName[88] = 'X';
+    keyName[89] = 'Y';
+    keyName[90] = 'Z';
+    keyName[91] = 'LEFT_WINDOWS';
+    keyName[92] = 'RIGHT_WINDOWS';
+    keyName[93] = 'MENU';
+    keyName[96] = 'NUMPAD_0';
+    keyName[97] = 'NUMPAD_1';
+    keyName[98] = 'NUMPAD_2';
+    keyName[99] = 'NUMPAD_3';
+    keyName[100] = 'NUMPAD_4';
+    keyName[101] = 'NUMPAD_5';
+    keyName[102] = 'NUMPAD_6';
+    keyName[103] = 'NUMPAD_7';
+    keyName[104] = 'NUMPAD_8';
+    keyName[105] = 'NUMPAD_9';
+    keyName[106] = 'MULTIPLY';
+    keyName[107] = 'ADD';
+    keyName[109] = 'SUBTRACT';
+    keyName[110] = 'DECIMAL_POINT';
+    keyName[111] = 'DIVIDE';
+    keyName[112] = 'F1';
+    keyName[113] = 'F2';
+    keyName[114] = 'F3';
+    keyName[115] = 'F4';
+    keyName[116] = 'F5';
+    keyName[117] = 'F6';
+    keyName[118] = 'F7';
+    keyName[119] = 'F8';
+    keyName[120] = 'F9';
+    keyName[121] = 'F10';
+    keyName[122] = 'F11';
+    keyName[123] = 'F12';
+    keyName[144] = 'NUM_LOCK';
+    keyName[145] = 'SCROLL_LOCK';
+    keyName[166] = 'BROWSER_BACK';
+    keyName[167] = 'BROWSER_FORWARD';
+    keyName[186] = 'SEMICOLON';
+    keyName[187] = 'EQUAL';
+    keyName[188] = 'COMMA';
+    keyName[189] = 'DASH';
+    keyName[190] = 'PERIOD';
+    keyName[191] = 'FORWARD_SLASH';
+    keyName[192] = 'GRAVE_ACCENT';
+    keyName[219] = 'OPEN_BRACKET';
+    keyName[220] = 'BACK_SLASH';
+    keyName[221] = 'CLOSE_BRAKET';
+    keyName[222] = 'SINGLE_QUOTE';
+
     $(function() {
         $(document).disableSelection();
-
-        //var blocked = false;
-        //setInterval(function() {
-            //console.log('a');
-//
-            //blocked = !blocked;
-//
-            //LUA['Game.AllowKeyInput'](blocked);
-        //}, 10);
 
         $( "#menu" ).menu({
             select: function(e, ui) {
                 $("#menu").menu("focus", e, ui.item);
             },
             blur: function(event, ui) {
-                //LUA['Game.AllowKeyInput'](true);
+                LUA['Game.AllowKeyInput'](true);
             },
             focus: function(event, ui) {
-                //LUA['Game.AllowKeyInput'](false);
+                LUA['Game.AllowKeyInput'](false);
             },
             position: {
                 my: "left top",
@@ -75,6 +170,8 @@
                 $(this).parent().find('.rVal').html('' + parseFloat($(this).val()) + '');
             },
             keydown: function (e) {
+                e.preventDefault();
+
                 var index = $.inArray(e.keyCode, keysDown);
 
                 if(index === -1) {
@@ -84,10 +181,10 @@
                 if($.inArray(e.keyCode, keysPressed) === -1) {
                     keysPressed.push(e.keyCode);
                 }
-
-                e.preventDefault();
             },
             keyup: function (e) {
+                e.preventDefault();
+
                 var index = $.inArray(e.keyCode, keysDown);
 
                 if(index !== -1) {
@@ -101,35 +198,14 @@
                         if(charCode != '') {
                             charCode += '+';
                         }
-                        if(keysPressed[i] == 32) {
-                            charCode += 'SPACE';
-                        } else if(keysPressed[i] == 17) {
-                            charCode += 'CTRL';
-                        } else if(keysPressed[i] == 16) {
-                            charCode += 'SHIFT';
-                        } else if(keysPressed[i] == 18) {
-                            charCode += 'ALT';
-                        } else {
-                            charCode += String.fromCharCode(keysPressed[i]);
+
+                        if(keysPressed[i] in keyName) {
+                            charCode += keyName[keysPressed[i]];
                         }
                     }
 
                     $(this).val(charCode).blur();
                 }
-
-                // Allow: backspace, delete, tab, escape, enter and .
-                //if ($.inArray(e.keyCode, [46, 8, 9, 27, 13, 110, 190]) !== -1 ||
-                     // Allow: Ctrl+A
-                //    (e.keyCode == 65 && e.ctrlKey === true) ||
-                     // Allow: home, end, left, right
-                //    (e.keyCode >= 35 && e.keyCode <= 39)) {
-                         // let it happen, don't do anything
-                //         return;
-                //}
-                // Ensure that it is a number and stop the keypress
-                //if ((e.shiftKey || (e.keyCode < 48 || e.keyCode > 57)) && (e.keyCode < 96 || e.keyCode > 105)) {
-                e.preventDefault();
-                //}
             }
         }, '.addonConfigKeyBinding input');
 
