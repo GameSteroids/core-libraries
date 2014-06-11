@@ -22,22 +22,21 @@ end
 
 local keyDown = {}
 
+local KeysDown = function(keys)
+    for num, expectedKey in pairs(keys) do
+        if not keyDown[expectedKey] then
+            return false
+        end
+    end
+
+    return true
+end
+
 function TriggerKeyCallbacks(callbacksTable, key)
         -- check potential keybindings
     for k, keyBinding in ipairs(callbacksTable) do
-        -- only if current key is part of the binding
-        if keyBinding.keys[key] then
-            -- check if all keys of the combo are found
-            local allKeysFound = true
-            for num, expectedKey in pairs(keyBinding.keys) do
-                if not keyDown[expectedKey] then
-                    allKeysFound = false
-                    break
-                end
-            end
-            if allKeysFound then
-                keyBinding.func(keyBinding.stringKeys)
-            end
+        if keyBinding.keys[key] and KeysDown(keyBinding.keys) then
+            keyBinding.func(keyBinding.stringKeys)
         end
     end
 end
@@ -62,7 +61,7 @@ Callback_Bind('WndMsg', function(msg, key)
         Callback.Trigger('KeyPress', key)
 
         -- trigger specific KeyPress events
-        if #keyBindings.KeyDown >= 1 then
+        if #keyBindings.KeyPress >= 1 then
             TriggerKeyCallbacks(keyBindings.KeyPress, key)
         end
     elseif msg == 257 then

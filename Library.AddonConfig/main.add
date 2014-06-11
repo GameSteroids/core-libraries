@@ -14,9 +14,8 @@ class 'Menu' -- {
             v._parent = self
 
             local id = v:id()
-
             if id then
-                self._value[v:id()] = v:value()
+                self._value[id] = v:value()
             end
         end
 
@@ -185,8 +184,8 @@ class 'KeyBinding' -- {
                    '<span class="caption">' ..
                       self._caption .. ': ' ..
                       '<span class="currentValue">' ..
-                          '<span class="rVal">' .. (type(self:value()) == 'number' and string.char(82) or '83') .. '</span>' ..
-                          '<input type=text onchange="' .. WebView.JSClosure(function(params)
+                          '<span class="rVal">' .. self:value() .. '</span>' ..
+                          '<input type=text onblur="' .. WebView.JSClosure(function(params)
                               self._parent._value[self:id()] = params[1]
 
                               if self._callback then

@@ -206,22 +206,46 @@ local KeyName = {
     [222] = SINGLE_QUOTE
 }
 
-StringToKeyCodes = function(keyString)
-    local keys = {}
+local _StringToKeyCodesCache = {}
 
-    for token in string.gmatch(string.upper(keyString), "[^+]+") do
-        local keyCode = KeyCode[token]
+local StringToKeyCodes = function(keyString)
+    if _StringToKeyCodesCache[keyString] == nil then
+        local keys = {}
 
-        if keyCode then
-            keys[keyCode] = keyCode
+        for token in string.gmatch(string.upper(keyString), "[^+]+") do
+            local keyCode = KeyCode[token]
+
+            if keyCode then
+                keys[keyCode] = keyCode
+            end
+        end
+
+        _StringToKeyCodesCache[keyString] = keys
+    end
+
+    return _StringToKeyCodesCache[keyString]
+end
+
+local _KeysDownModifier = {
+    string = function(keys)
+        return StringToKeyCodes(keys)
+    end
+}
+
+local KeysDown = function(keys)
+    local modifier = _KeysDownModifier[type(keys)]
+    for num, expectedKey in pairs(modifier and modifier(keys) or keys) do
+        if not Keyboard.IsKeyDown(expectedKey) then
+            return false
         end
     end
 
-    return keys
+    return true
 end
 
 namespace 'Keyboard' {
     KeyCode = KeyCode,
     KeyName = KeyName,
+    KeysDown = KeysDown,
     StringToKeyCodes = StringToKeyCodes
 }
