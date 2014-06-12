@@ -22,12 +22,12 @@ class 'Menu' -- {
         return self
     end
 
-    function Menu:render()
+    function Menu:render(web)
         local renderResult = '<a href="#" style="border-radius:0px;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>' .. self._caption .. '</a><ul>';
 
         for k, v in ipairs(self._children) do
             if type(v) == 'userdata' then
-                renderResult = renderResult .. '<li>' .. v:render() .. '</li>'
+                renderResult = renderResult .. '<li>' .. v:render(web) .. '</li>'
             end
         end
 
@@ -68,12 +68,12 @@ class 'Section' -- {
         return self
     end
 
-    function Section:render()
+    function Section:render(web)
         local renderResult = '<div style="margin-top:2px;color:#ffffff;position:relative;z-Index:1;top:10px;font-size:8px;font-family:Silkscreen;text-align:center"><span style="display:inline-block;background-color:#111111;padding-left:1px;padding-right:1px;">' .. self._caption .. '</span></div></li><li class="section">-';
 
         for k, v in ipairs(self._children) do
             if type(v) == 'userdata' then
-                renderResult = renderResult .. '</li><li>' .. v:render()
+                renderResult = renderResult .. '</li><li>' .. v:render(web)
             end
         end
 
@@ -93,7 +93,7 @@ class 'Separator' -- {
     function Separator:__init()
     end
 
-    function Separator:render()
+    function Separator:render(web)
         return '-'
     end
 
@@ -113,8 +113,8 @@ class 'Boolean' -- {
         self._callback = callback
     end
 
-    function Boolean:render()
-        return '<a href="#" class="addonConfigBoolean" onclick="' .. WebView.JSClosure(function()
+    function Boolean:render(web)
+        return '<a href="#" class="addonConfigBoolean" onclick="' .. WebView.JSClosure(web, function()
             self._parent._value[self:id()] = not self._parent._value[self:id()]
 
             if self._callback then
@@ -141,14 +141,14 @@ class 'Number' -- {
         self._callback = callback
     end
 
-    function Number:render()
+    function Number:render(web)
         return '<a href="#" class="addonConfigNumber">' ..
                    '<i class="ui-icon fa fa-pencil"></i>' ..
                    '<span class="caption">' ..
                       self._caption .. ': ' ..
                       '<span class="currentValue">' ..
                           '<span class="rVal">' .. self:value() .. '</span>' ..
-                          '<input type=text onchange="' .. WebView.JSClosure(function(params)
+                          '<input type=text onchange="' .. WebView.JSClosure(web, function(params)
                               self._parent._value[self:id()] = params[1]
 
                               if self._callback then
@@ -178,14 +178,14 @@ class 'KeyBinding' -- {
         self._callback = callback
     end
 
-    function KeyBinding:render()
+    function KeyBinding:render(web)
         return '<a href="#" class="addonConfigKeyBinding">' ..
                    '<i class="ui-icon fa fa-keyboard-o"></i>' ..
                    '<span class="caption">' ..
                       self._caption .. ': ' ..
                       '<span class="currentValue">' ..
                           '<span class="rVal">' .. self:value() .. '</span>' ..
-                          '<input type=text onblur="' .. WebView.JSClosure(function(params)
+                          '<input type=text onblur="' .. WebView.JSClosure(web, function(params)
                               self._parent._value[self:id()] = params[1]
 
                               if self._callback then
@@ -208,9 +208,9 @@ class 'KeyBinding' -- {
     end
 -- }
 
-Callback.Bind('WebInit', function()
+Callback.Bind('WebInit', function(web, url)
     if #subMenus >= 1 then
-        LUA = WebView.CreateJSObject('LUA')
+        LUA = web:NewObject('LUA')
         LUA['Game.Chat.Print'] = function(params)
             Game.Chat.Print(params[1])
         end
@@ -224,12 +224,12 @@ Callback.Bind('WebInit', function()
         local result = Utility.ReadFile(path .. 'menu.html') .. '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
 
         for k, v in ipairs(subMenus) do
-            result = result .. '<li>' .. v:render() .. '</li>'
+            result = result .. '<li>' .. v:render(web) .. '</li>'
         end
 
         result = result .. '</ul></li></ul>'
 
-        WebView.jQuery('#mainDiv'):html(result)
+        web:JQuery('#mainDiv'):html(result)
     end
 end)
 

@@ -7,5 +7,6 @@
     <version>1.0.0</version>
     <author>Husk0r</author>
     <description></description>
+    <builtin>true</builtin>
     <requirements></requirements>
 </manifest>

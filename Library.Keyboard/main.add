@@ -229,12 +229,16 @@ end
 local _KeysDownModifier = {
     string = function(keys)
         return StringToKeyCodes(keys)
+    end,
+
+    table = function(keys)
+        return keys
     end
 }
 
-local KeysDown = function(keys)
+local KeysDown = function(keys, ...)
     local modifier = _KeysDownModifier[type(keys)]
-    for num, expectedKey in pairs(modifier and modifier(keys) or keys) do
+    for num, expectedKey in pairs(modifier and modifier(keys) or {keys, ...}) do
         if not Keyboard.IsKeyDown(expectedKey) then
             return false
         end

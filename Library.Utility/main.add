@@ -91,9 +91,9 @@ namespace 'table' {
 
 -- WEBVIEW NAMESPACE ==========================================================
 
-function JSClosure(func)
+function JSClosure(web, func)
     if not functionIndex then
-        functionIndex = WebView.CreateJSObject('functionIndex')
+        functionIndex = web:NewObject('functionIndex')
         functionIndex.lastFunction = 0
     end
 
