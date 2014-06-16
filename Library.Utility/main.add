@@ -14,30 +14,6 @@
     else
         return math.huge
     end
-end
-
-Game.Unit.hasSpell = function(self, spellName)
-    for i, slot in ipairs({Game.Slots.Spell1, Game.Slots.Summoner1, Game.Slots.Summoner2}) do
-        local spellData = self:GetSpellData(slot)
-
-        if spellData and spellData.name:find(spellName) then
-            return slot, spellData
-        end
-    end
-end
-
-Game.Unit.hpBarData = function(self)
-    local barPos = Game.GetUnitHPBarPos(self)
-
-    if self.charName == 'Dragon' then
-        return math.floor(barPos.x - 63), math.floor(barPos.y - 7), 124, 3
-    elseif self.charName == 'Worm' then
-        return math.floor(barPos.x - 63), math.floor(barPos.y), 124, 3
-    elseif self.charName == 'TT_Spiderboss' then
-        return math.floor(barPos.x - 63), math.floor(barPos.y), 124, 3
-    else
-        return math.floor(barPos.x - 32), math.floor(barPos.y), 62, 3
-    end
 end]]
 
 -- UTILITY NAMESPACE ==========================================================
@@ -93,7 +69,7 @@ namespace 'table' {
 
 function JSClosure(web, func)
     if not functionIndex then
-        functionIndex = web:NewObject('functionIndex')
+        functionIndex = web:CreateObject('functionIndex')
         functionIndex.lastFunction = 0
     end
 

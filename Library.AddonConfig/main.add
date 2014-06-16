@@ -26,9 +26,7 @@ class 'Menu' -- {
         local renderResult = '<a href="#" style="border-radius:0px;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>' .. self._caption .. '</a><ul>';
 
         for k, v in ipairs(self._children) do
-            if type(v) == 'userdata' then
-                renderResult = renderResult .. '<li>' .. v:render(web) .. '</li>'
-            end
+            renderResult = renderResult .. '<li>' .. v:render(web) .. '</li>'
         end
 
         renderResult = renderResult .. '</ul>'
@@ -72,9 +70,7 @@ class 'Section' -- {
         local renderResult = '<div style="margin-top:2px;color:#ffffff;position:relative;z-Index:1;top:10px;font-size:8px;font-family:Silkscreen;text-align:center"><span style="display:inline-block;background-color:#111111;padding-left:1px;padding-right:1px;">' .. self._caption .. '</span></div></li><li class="section">-';
 
         for k, v in ipairs(self._children) do
-            if type(v) == 'userdata' then
-                renderResult = renderResult .. '</li><li>' .. v:render(web)
-            end
+            renderResult = renderResult .. '</li><li>' .. v:render(web)
         end
 
         return renderResult
@@ -148,8 +144,8 @@ class 'Number' -- {
                       self._caption .. ': ' ..
                       '<span class="currentValue">' ..
                           '<span class="rVal">' .. self:value() .. '</span>' ..
-                          '<input type=text onchange="' .. WebView.JSClosure(web, function(params)
-                              self._parent._value[self:id()] = params[1]
+                          '<input type=text onchange="' .. WebView.JSClosure(web, function(param)
+                              self._parent._value[self:id()] = param
 
                               if self._callback then
                                   self._callback(self._parent._value[self:id()])
@@ -185,8 +181,8 @@ class 'KeyBinding' -- {
                       self._caption .. ': ' ..
                       '<span class="currentValue">' ..
                           '<span class="rVal">' .. self:value() .. '</span>' ..
-                          '<input type=text onblur="' .. WebView.JSClosure(web, function(params)
-                              self._parent._value[self:id()] = params[1]
+                          '<input type=text onblur="' .. WebView.JSClosure(web, function(param)
+                              self._parent._value[self:id()] = param
 
                               if self._callback then
                                   self._callback(self._parent._value[self:id()])
@@ -210,15 +206,15 @@ class 'KeyBinding' -- {
 
 Callback.Bind('WebInit', function(web, url)
     if #subMenus >= 1 then
-        LUA = web:NewObject('LUA')
-        LUA['Game.Chat.Print'] = function(params)
-            Game.Chat.Print(params[1])
+        LUA = web:CreateObject('LUA')
+        LUA['Game.Chat.Print'] = function(param)
+            Game.Chat.Print(param)
         end
-        LUA['Game.AllowKeyInput'] = function(params)
-            Game.AllowKeyInput(params[1])
+        LUA['Game.AllowKeyInput'] = function(param)
+            Game.AllowKeyInput(param)
         end
-        LUA['print'] = function(params)
-            print(params[1])
+        LUA['print'] = function(param)
+            print(param)
         end
 
         local result = Utility.ReadFile(path .. 'menu.html') .. '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
@@ -229,7 +225,7 @@ Callback.Bind('WebInit', function(web, url)
 
         result = result .. '</ul></li></ul>'
 
-        web:JQuery('#mainDiv'):html(result)
+        web:JQuery('#mainDiv'):Invoke('html', result)
     end
 end)
 
