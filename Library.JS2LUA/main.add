@@ -1,0 +1,13 @@
+Callback.Bind('WebInit', function(web, url)
+    LUA = web:CreateObject('LUA')
+
+    LUA['Game.Chat.Print'] = function(...)
+        Game.Chat.Print(...)
+    end
+    LUA['Game.AllowKeyInput'] = function(...)
+        Game.AllowKeyInput(...)
+    end
+    LUA['print'] = function(...)
+        print(...)
+    end
+end)

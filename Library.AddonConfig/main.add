@@ -5,6 +5,8 @@ class 'Menu' -- {
         self._caption = caption
         self._children = {}
         self._value = {}
+
+        self._id = string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
     end
 
     function Menu:__call(childElements)
@@ -35,7 +37,7 @@ class 'Menu' -- {
     end
 
     function Menu:id()
-        return string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+        return self._id
     end
 
     function Menu:value()
@@ -48,6 +50,8 @@ class 'Section' -- {
         self._caption = caption
         self._children = {}
         self._value = {}
+
+        self._id = string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
     end
 
     function Section:__call(childElements)
@@ -77,7 +81,7 @@ class 'Section' -- {
     end
 
     function Section:id()
-        return string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+        return self._id
     end
 
     function Section:value()
@@ -94,7 +98,7 @@ class 'Separator' -- {
     end
 
     function Separator:id()
-        return nil
+        return self._id
     end
 
     function Separator:value()
@@ -107,6 +111,8 @@ class 'Boolean' -- {
         self._caption = caption
         self._defaultValue = defaultValue == nil and true or defaultValue
         self._callback = callback
+
+        self._id = string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
     end
 
     function Boolean:render(web)
@@ -120,7 +126,7 @@ class 'Boolean' -- {
     end
 
     function Boolean:id()
-        return string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+        return self._id
     end
 
     function Boolean:value()
@@ -135,6 +141,8 @@ class 'Number' -- {
         self._caption = caption
         self._defaultValue = defaultValue
         self._callback = callback
+
+        self._id = string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
     end
 
     function Number:render(web)
@@ -157,7 +165,7 @@ class 'Number' -- {
     end
 
     function Number:id()
-        return string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+        return self._id
     end
 
     function Number:value()
@@ -172,6 +180,8 @@ class 'KeyBinding' -- {
         self._caption = caption
         self._defaultValue = defaultValue
         self._callback = callback
+
+        self._id = string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
     end
 
     function KeyBinding:render(web)
@@ -194,7 +204,7 @@ class 'KeyBinding' -- {
     end
 
     function KeyBinding:id()
-        return string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+        return self._id
     end
 
     function KeyBinding:value()
@@ -204,28 +214,44 @@ class 'KeyBinding' -- {
     end
 -- }
 
+local Repaint = function(web)
+    web  = web or WebView.GetMain()
+
+    local result = [[<script type="text/javascript">
+    $(function() {
+        $(document).disableSelection();
+
+        $( "#menu" ).menu({
+            select: function(e, ui) {
+                $("#menu").menu("focus", e, ui.item);
+            },
+            blur: function(event, ui) {
+                LUA['Game.AllowKeyInput'](true);
+            },
+            focus: function(event, ui) {
+                LUA['Game.AllowKeyInput'](false);
+            },
+            position: {
+                my: "left top",
+                at: "right+7 top-6"
+            }
+        });
+    });
+</script>]] .. '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
+
+    for k, v in ipairs(subMenus) do
+        result = result .. '<li>' .. v:render(web) .. '</li>'
+    end
+
+    web:JQuery('#menuContainer'):Invoke('html', result .. '</ul></li></ul>')
+
+end
+
 Callback.Bind('WebInit', function(web, url)
+    web:JQuery('body'):Invoke('append', Utility.ReadFile(path .. 'menu.html'))
+
     if #subMenus >= 1 then
-        LUA = web:CreateObject('LUA')
-        LUA['Game.Chat.Print'] = function(param)
-            Game.Chat.Print(param)
-        end
-        LUA['Game.AllowKeyInput'] = function(param)
-            Game.AllowKeyInput(param)
-        end
-        LUA['print'] = function(param)
-            print(param)
-        end
-
-        local result = Utility.ReadFile(path .. 'menu.html') .. '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
-
-        for k, v in ipairs(subMenus) do
-            result = result .. '<li>' .. v:render(web) .. '</li>'
-        end
-
-        result = result .. '</ul></li></ul>'
-
-        web:JQuery('#mainDiv'):Invoke('html', result)
+        Repaint(web)
     end
 end)
 
@@ -255,6 +281,8 @@ function Create(subMenuCaption)
                 values = menu:value()
             end
 
+            Repaint()
+
             return t
         end,
 
@@ -271,5 +299,6 @@ namespace 'AddonConfig' {
     Number = Number,
     Separator = Separator,
     Section = Section,
-    KeyBinding = KeyBinding
+    KeyBinding = KeyBinding,
+    Repaint = Repaint
 }
