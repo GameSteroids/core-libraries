@@ -1,5 +1,7 @@
 local subMenus = {}
 
+local addonConfigModified = false
+
 class 'Menu' -- {
     function Menu:__init(caption)
         self._caption = caption
@@ -10,9 +12,16 @@ class 'Menu' -- {
     end
 
     function Menu:__call(childElements)
-        self._children = childElements
+        self:add(unpack(childElements or {}))
 
-        for k, v in ipairs(childElements) do
+        return self
+    end
+
+    function Menu:add(...)
+        addonConfigModified = true
+
+        for k, v in ipairs({...}) do
+            self._children[#self._children + 1] = v
             v._parent = self
 
             local id = v:id()
@@ -20,8 +29,6 @@ class 'Menu' -- {
                 self._value[id] = v:value()
             end
         end
-
-        return self
     end
 
     function Menu:render(web)
@@ -36,8 +43,16 @@ class 'Menu' -- {
         return renderResult
     end
 
-    function Menu:id()
-        return self._id
+    function Menu:id(...)
+        local args = {n = select('#', ...), ...}
+
+        if args.n == 0 then
+            return self._id
+        else
+            self._id = args[1]
+
+            return self
+        end
     end
 
     function Menu:value()
@@ -55,19 +70,23 @@ class 'Section' -- {
     end
 
     function Section:__call(childElements)
-        self._children = childElements
+        self:add(unpack(childElements or {}))
 
-        for k, v in ipairs(childElements) do
+        return self
+    end
+
+    function Section:add(...)
+        addonConfigModified = true
+
+        for k, v in ipairs({...}) do
+            self._children[#self._children + 1] = v
             v._parent = self
 
             local id = v:id()
-
             if id then
-                self._value[v:id()] = v:value()
+                self._value[id] = v:value()
             end
         end
-
-        return self
     end
 
     function Section:render(web)
@@ -80,8 +99,16 @@ class 'Section' -- {
         return renderResult
     end
 
-    function Section:id()
-        return self._id
+    function Section:id(...)
+        local args = {n = select('#', ...), ...}
+
+        if args.n == 0 then
+            return self._id
+        else
+            self._id = args[1]
+
+            return self
+        end
     end
 
     function Section:value()
@@ -97,8 +124,16 @@ class 'Separator' -- {
         return '-'
     end
 
-    function Separator:id()
-        return self._id
+    function Separator:id(...)
+        local args = {n = select('#', ...), ...}
+
+        if args.n == 0 then
+            return self._id
+        else
+            self._id = args[1]
+
+            return self
+        end
     end
 
     function Separator:value()
@@ -125,8 +160,16 @@ class 'Boolean' -- {
         end) .. '();"><i class="ui-icon fa fa-check" style="' .. (self:value() and 'opacity:1;' or '') ..  '"></i>' .. self._caption .. '</a>'
     end
 
-    function Boolean:id()
-        return self._id
+    function Boolean:id(...)
+        local args = {n = select('#', ...), ...}
+
+        if args.n == 0 then
+            return self._id
+        else
+            self._id = args[1]
+
+            return self
+        end
     end
 
     function Boolean:value()
@@ -164,8 +207,16 @@ class 'Number' -- {
                '</a>'
     end
 
-    function Number:id()
-        return self._id
+    function Number:id(...)
+        local args = {n = select('#', ...), ...}
+
+        if args.n == 0 then
+            return self._id
+        else
+            self._id = args[1]
+
+            return self
+        end
     end
 
     function Number:value()
@@ -203,8 +254,16 @@ class 'KeyBinding' -- {
                '</a>'
     end
 
-    function KeyBinding:id()
-        return self._id
+    function KeyBinding:id(...)
+        local args = {n = select('#', ...), ...}
+
+        if args.n == 0 then
+            return self._id
+        else
+            self._id = args[1]
+
+            return self
+        end
     end
 
     function KeyBinding:value()
@@ -215,44 +274,43 @@ class 'KeyBinding' -- {
 -- }
 
 local Repaint = function(web)
-    web  = web or WebView.GetMain()
+if #subMenus >= 1 then
+        web  = web or WebView.GetMain()
 
-    local result = [[<script type="text/javascript">
-    $(function() {
-        $(document).disableSelection();
+        local result = [[<script type="text/javascript">
+        $(function() {
+            $(document).disableSelection();
 
-        $( "#menu" ).menu({
-            select: function(e, ui) {
-                $("#menu").menu("focus", e, ui.item);
-            },
-            blur: function(event, ui) {
-                LUA['Game.AllowKeyInput'](true);
-            },
-            focus: function(event, ui) {
-                LUA['Game.AllowKeyInput'](false);
-            },
-            position: {
-                my: "left top",
-                at: "right+7 top-6"
-            }
+            $( "#menu" ).menu({
+                select: function(e, ui) {
+                    $("#menu").menu("focus", e, ui.item);
+                },
+                blur: function(event, ui) {
+                    LUA['Game.AllowKeyInput'](true);
+                },
+                focus: function(event, ui) {
+                    LUA['Game.AllowKeyInput'](false);
+                },
+                position: {
+                    my: "left top",
+                    at: "right+7 top-6"
+                }
+            });
         });
-    });
-</script>]] .. '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
+    </script>]] .. '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
 
-    for k, v in ipairs(subMenus) do
-        result = result .. '<li>' .. v:render(web) .. '</li>'
+        for k, v in ipairs(subMenus) do
+            result = result .. '<li>' .. v:render(web) .. '</li>'
+        end
+
+        web:JQuery('#menuContainer'):Invoke('html', result .. '</ul></li></ul>')
     end
-
-    web:JQuery('#menuContainer'):Invoke('html', result .. '</ul></li></ul>')
-
 end
 
 Callback.Bind('WebInit', function(web, url)
     web:JQuery('body'):Invoke('append', Utility.ReadFile(path .. 'menu.html'))
 
-    if #subMenus >= 1 then
-        Repaint(web)
-    end
+    addonConfigModified = true
 end)
 
 function Create(subMenuCaption)
@@ -281,8 +339,6 @@ function Create(subMenuCaption)
                 values = menu:value()
             end
 
-            Repaint()
-
             return t
         end,
 
@@ -291,6 +347,14 @@ function Create(subMenuCaption)
         end
     })
 end
+
+Callback.Bind('Tick', function()
+    if addonConfigModified then
+        Repaint()
+
+        addonConfigModified = false
+    end
+end)
 
 namespace 'AddonConfig' {
     Create = Create,
