@@ -186,14 +186,14 @@ class 'KeyBinding' (ConfigValueElement) -- {
                    '<span class="caption">' ..
                       self._caption .. ': ' ..
                       '<span class="currentValue">' ..
-                          '<span class="rVal">' .. self:value() .. '</span>' ..
+                          '<span class="rVal">' .. self:Value() .. '</span>' ..
                           '<input type=text onblur="' .. WebView.JSClosure(web, function(param)
                               self:Value(param)
 
                               if self._callback then
                                   self._callback(self:Value())
                               end
-                          end) .. '($(this).val());" style="visibility:hidden;position:absolute;top:0px;left:1px;width:100%;margin:0px;display:block;outline:0px;background-color:transparent;color:#ffffff;border:none" value="' .. self:value() .. '" />' ..
+                          end) .. '($(this).val());" style="visibility:hidden;position:absolute;top:0px;left:1px;width:100%;margin:0px;display:block;outline:0px;background-color:transparent;color:#ffffff;border:none" value="' .. self:Value() .. '" />' ..
                       '</span>' ..
                    '</span>' ..
                '</a>'
