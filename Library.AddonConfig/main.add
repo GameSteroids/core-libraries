@@ -2,308 +2,243 @@ local subMenus = {}
 
 local addonConfigModified = false
 
-class 'Menu' -- {
-    function Menu:__init(caption)
-        self._caption = caption
-        self._children = {}
-        self._value = {}
+local uniqueId = 1
 
-        self._id = string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
-    end
-
-    function Menu:__call(childElements)
-        self:add(unpack(childElements or {}))
-
-        return self
-    end
-
-    function Menu:add(...)
-        addonConfigModified = true
-
-        for k, v in ipairs({...}) do
-            self._children[#self._children + 1] = v
-            v._parent = self
-
-            local id = v:id()
-            if id then
-                self._value[id] = v:value()
-            end
-        end
-    end
-
-    function Menu:render(web)
-        local renderResult = '<a href="#" style="border-radius:0px;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>' .. self._caption .. '</a><ul>';
-
-        for k, v in ipairs(self._children) do
-            renderResult = renderResult .. '<li>' .. v:render(web) .. '</li>'
-        end
-
-        renderResult = renderResult .. '</ul>'
-
-        return renderResult
-    end
-
-    function Menu:id(...)
+local property = function(name)
+    return function(self, ...)
         local args = {n = select('#', ...), ...}
 
         if args.n == 0 then
-            return self._id
+            return self[name]
         else
-            self._id = args[1]
+            self[name] = args[1]
 
             return self
         end
     end
+end
 
-    function Menu:value()
-        return self._value
+class 'ConfigElement' -- {
+    ConfigElement.Parent = property('_parent')
+    ConfigElement.UniqueId = property('_uniqueId')
+    ConfigElement.Id = property('_id')
+
+    function ConfigElement:__init()
+        self:UniqueId(uniqueId)
+        self:Id(uniqueId)
+
+        uniqueId = uniqueId + 1
     end
 -- }
 
-class 'Section' -- {
-    function Section:__init(caption)
-        self._caption = caption
-        self._children = {}
-        self._value = {}
+class 'ConfigValueElement' (ConfigElement) -- {
+    ConfigValueElement.Caption = property('_caption')
+    ConfigValueElement.Value = property('_value')
 
-        self._id = string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+    function ConfigValueElement:__init(caption, defaultValue)
+        ConfigElement.__init(self)
+
+        self:Caption(caption)
+        self:Value(defaultValue)
+    end
+-- }
+
+class 'ConfigContainerElement' (ConfigElement) -- {
+    ConfigContainerElement.Children = property('_children')
+
+    function ConfigContainerElement:__init()
+        ConfigElement.__init(self)
+
+        self:Children({})
     end
 
-    function Section:__call(childElements)
-        self:add(unpack(childElements or {}))
+    function ConfigContainerElement:__call(childElements)
+        local orderedChildren = {}
+        for index, component in pairs(childElements or {}) do
+            if type(index) == 'string' then
+                orderedChildren[#orderedChildren + 1] = component:Id(index)
+            else
+                orderedChildren[#orderedChildren + 1] = component:Id(component:UniqueId())
+            end
+        end
+
+        table.sort(orderedChildren, function(c1, c2)
+            return c1:UniqueId() < c2:UniqueId()
+        end)
+
+        self:Add(unpack(orderedChildren))
 
         return self
     end
 
-    function Section:add(...)
+    function ConfigContainerElement:Add(...)
         addonConfigModified = true
 
-        for k, v in ipairs({...}) do
-            self._children[#self._children + 1] = v
-            v._parent = self
+        local children = self:Children()
+        for k, component in ipairs({...}) do
+            component:Parent(self)
 
-            local id = v:id()
-            if id then
-                self._value[id] = v:value()
-            end
+            self[component:Id()] = component
+            children[#children + 1] = component
         end
     end
+-- }
 
-    function Section:render(web)
+class 'Menu' (ConfigContainerElement) -- {
+    Menu.Caption = property('_caption')
+
+    function Menu:__init(caption)
+        ConfigContainerElement.__init(self)
+
+        self:Caption(caption)
+    end
+
+    function Menu:Render(web)
+        local renderResult = '<a href="#" style="border-radius:0px;" id="' .. self:UniqueId() .. '"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>' .. self._caption .. '</a><ul>';
+
+        for k, component in ipairs(self:Children()) do
+            renderResult = renderResult .. '<li>' .. component:Render(web) .. '</li>'
+        end
+
+        return renderResult .. '</ul>'
+    end
+-- }
+
+class 'Section' (ConfigContainerElement) -- {
+    Section.Caption = property('_caption')
+
+    function Section:__init(caption)
+        ConfigContainerElement.__init(self)
+
+        self:Caption(caption)
+    end
+
+    function Section:Render(web)
         local renderResult = '<div style="margin-top:2px;color:#ffffff;position:relative;z-Index:1;top:10px;font-size:8px;font-family:Silkscreen;text-align:center"><span style="display:inline-block;background-color:#111111;padding-left:1px;padding-right:1px;">' .. self._caption .. '</span></div></li><li class="section">-';
 
-        for k, v in ipairs(self._children) do
-            renderResult = renderResult .. '</li><li>' .. v:render(web)
+        for k, component in ipairs(self:Children()) do
+            renderResult = renderResult .. '</li><li>' .. component:Render(web)
         end
 
         return renderResult
     end
-
-    function Section:id(...)
-        local args = {n = select('#', ...), ...}
-
-        if args.n == 0 then
-            return self._id
-        else
-            self._id = args[1]
-
-            return self
-        end
-    end
-
-    function Section:value()
-        return self._value
-    end
 -- }
 
-class 'Separator' -- {
+class 'Separator' (ConfigValueElement) -- {
     function Separator:__init()
+        ConfigValueElement.__init(self)
     end
 
-    function Separator:render(web)
+    function Separator:Render(web)
         return '-'
     end
-
-    function Separator:id(...)
-        local args = {n = select('#', ...), ...}
-
-        if args.n == 0 then
-            return self._id
-        else
-            self._id = args[1]
-
-            return self
-        end
-    end
-
-    function Separator:value()
-        return nil
-    end
 -- }
 
-class 'Boolean' -- {
-    function Boolean:__init(caption, defaultValue, callback)
-        self._caption = caption
-        self._defaultValue = defaultValue == nil and true or defaultValue
-        self._callback = callback
-
-        self._id = string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+class 'Boolean' (ConfigValueElement) -- {
+    function Boolean:__init(caption, defaultValue)
+        ConfigValueElement.__init(self, caption, defaultValue)
     end
 
-    function Boolean:render(web)
-        return '<a href="#" class="addonConfigBoolean" onclick="' .. WebView.JSClosure(web, function()
-            self._parent._value[self:id()] = not self._parent._value[self:id()]
+    function Boolean:Render(web)
+        return '<a href="#" class="addonConfigBoolean" id="' .. self:UniqueId() .. '" onclick="' .. WebView.JSClosure(web, function()
+            self:Value(not self:Value())
 
             if self._callback then
-                self._callback(self._parent._value[self:id()])
+                self._callback(self:Value())
             end
-        end) .. '();"><i class="ui-icon fa fa-check" style="' .. (self:value() and 'opacity:1;' or '') ..  '"></i>' .. self._caption .. '</a>'
-    end
-
-    function Boolean:id(...)
-        local args = {n = select('#', ...), ...}
-
-        if args.n == 0 then
-            return self._id
-        else
-            self._id = args[1]
-
-            return self
-        end
-    end
-
-    function Boolean:value()
-        local currentValue = self._parent._value[self:id()]
-
-        return currentValue == nil and self._defaultValue or currentValue
+        end) .. '();" id="u_' .. self:UniqueId() .. '"><i class="ui-icon fa fa-check" style="' .. (self:Value() and 'opacity:1;' or '') ..  '"></i>' .. self:Caption() .. '</a>'
     end
 -- }
 
-class 'Number' -- {
+class 'Number' (ConfigValueElement) -- {
     function Number:__init(caption, defaultValue, callback)
-        self._caption = caption
-        self._defaultValue = defaultValue
-        self._callback = callback
-
-        self._id = string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+        ConfigValueElement.__init(self, caption, defaultValue)
     end
 
-    function Number:render(web)
-        return '<a href="#" class="addonConfigNumber">' ..
-                   '<i class="ui-icon fa fa-pencil"></i>' ..
-                   '<span class="caption">' ..
-                      self._caption .. ': ' ..
-                      '<span class="currentValue">' ..
-                          '<span class="rVal">' .. self:value() .. '</span>' ..
-                          '<input type=text onchange="' .. WebView.JSClosure(web, function(param)
-                              self._parent._value[self:id()] = param
+    function Number:Render(web)
+        return '<a href="#" class="addonConfigNumber" id="u_' .. self:UniqueId() .. '">' ..
+           '<i class="ui-icon fa fa-pencil"></i>' ..
+           '<span class="caption">' ..
+              self._caption .. ': ' ..
+              '<span class="currentValue">' ..
+                  '<span class="rVal">' .. self:Value() .. '</span>' ..
+                  '<input type=text onchange="' .. WebView.JSClosure(web, function(param)
+                      self:Value(param)
 
-                              if self._callback then
-                                  self._callback(self._parent._value[self:id()])
-                              end
-                          end) .. '($(this).val());" style="visibility:hidden;position:absolute;top:0px;left:1px;width:100%;margin:0px;display:block;outline:0px;background-color:transparent;color:#ffffff;border:none" value="' .. self:value() .. '" />' ..
-                      '</span>' ..
-                   '</span>' ..
-               '</a>'
-    end
-
-    function Number:id(...)
-        local args = {n = select('#', ...), ...}
-
-        if args.n == 0 then
-            return self._id
-        else
-            self._id = args[1]
-
-            return self
-        end
-    end
-
-    function Number:value()
-        local currentValue = self._parent._value[self:id()]
-
-        return currentValue == nil and self._defaultValue or currentValue
+                      if self._callback then
+                          self._callback(self:Value())
+                      end
+                  end) .. '($(this).val());" style="visibility:hidden;position:absolute;top:0px;left:1px;width:100%;margin:0px;display:block;outline:0px;background-color:transparent;color:#ffffff;border:none" value="' .. self:Value() .. '" />' ..
+              '</span>' ..
+           '</span>' ..
+       '</a>'
     end
 -- }
 
-class 'KeyBinding' -- {
-    function KeyBinding:__init(caption, defaultValue, callback)
-        self._caption = caption
-        self._defaultValue = defaultValue
-        self._callback = callback
-
-        self._id = string.gsub(self._caption, "%s*(%w+)", function(w) return w:gsub("^%l", string.upper) end):gsub("^%u", string.lower)
+class 'KeyBinding' (ConfigValueElement) -- {
+    function KeyBinding:__init(caption, defaultValue)
+        ConfigValueElement.__init(self, caption, defaultValue)
     end
 
-    function KeyBinding:render(web)
-        return '<a href="#" class="addonConfigKeyBinding">' ..
+    function KeyBinding:Render(web)
+        return '<a href="#" class="addonConfigKeyBinding" id="' .. self:UniqueId() .. '">' ..
                    '<i class="ui-icon fa fa-keyboard-o"></i>' ..
                    '<span class="caption">' ..
                       self._caption .. ': ' ..
                       '<span class="currentValue">' ..
                           '<span class="rVal">' .. self:value() .. '</span>' ..
                           '<input type=text onblur="' .. WebView.JSClosure(web, function(param)
-                              self._parent._value[self:id()] = param
+                              self:Value(param)
 
                               if self._callback then
-                                  self._callback(self._parent._value[self:id()])
+                                  self._callback(self:Value())
                               end
                           end) .. '($(this).val());" style="visibility:hidden;position:absolute;top:0px;left:1px;width:100%;margin:0px;display:block;outline:0px;background-color:transparent;color:#ffffff;border:none" value="' .. self:value() .. '" />' ..
                       '</span>' ..
                    '</span>' ..
                '</a>'
     end
-
-    function KeyBinding:id(...)
-        local args = {n = select('#', ...), ...}
-
-        if args.n == 0 then
-            return self._id
-        else
-            self._id = args[1]
-
-            return self
-        end
-    end
-
-    function KeyBinding:value()
-        local currentValue = self._parent._value[self:id()]
-
-        return currentValue == nil and self._defaultValue or currentValue
-    end
 -- }
 
 local Repaint = function(web)
-if #subMenus >= 1 then
+    if #subMenus >= 1 then
         web  = web or WebView.GetMain()
 
-        local result = [[<script type="text/javascript">
-        $(function() {
-            $(document).disableSelection();
+        local result = '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
 
-            $( "#menu" ).menu({
-                select: function(e, ui) {
-                    $("#menu").menu("focus", e, ui.item);
-                },
-                blur: function(event, ui) {
-                    LUA['Game.AllowKeyInput'](true);
-                },
-                focus: function(event, ui) {
-                    LUA['Game.AllowKeyInput'](false);
-                },
-                position: {
-                    my: "left top",
-                    at: "right+7 top-6"
-                }
-            });
-        });
-    </script>]] .. '<ul id="menu"><li><a href="#" style="border-radius:0px;position:relative;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>Config</a><ul>'
-
-        for k, v in ipairs(subMenus) do
-            result = result .. '<li>' .. v:render(web) .. '</li>'
+        for k, component in ipairs(subMenus) do
+            result = result .. '<li>' .. component:Render(web) .. '</li>'
         end
 
-        web:JQuery('#menuContainer'):Invoke('html', result .. '</ul></li></ul>')
+        web:JQuery('#menuContainer'):Invoke('append', '<script type="text/javascript">window.currentId = $("#menu .ui-state-focus").attr("id");</script>')
+        web:JQuery('#menuContainer'):Invoke('html', result .. '</ul></li></ul>' .. [[<script type="text/javascript">
+            $(function() {
+                $(document).disableSelection();
+
+                $("#menu").menu({
+                    select: function(e, ui) {
+                        $("#menu").menu("focus", e, ui.item);
+                    },
+                    blur: function(event, ui) {
+                        LUA['Game.AllowKeyInput'](true);
+                    },
+                    focus: function(event, ui) {
+                        LUA['Game.AllowKeyInput'](false);
+                    },
+                    position: {
+                        my: "left top",
+                        at: "right+7 top-6"
+                    }
+                });
+
+                if(!(typeof window.currentId === "undefined")) {
+                    $($("#menu").find("#" + window.currentId).parents('li').get().reverse()).each(function(index, element) {
+                        $("#menu").menu("focus", $.Event("click"), $(element));
+                        $('#menu').menu("expand", $.Event("click"));
+                    });
+                }
+            });
+        </script>]])
     end
 end
 
@@ -314,14 +249,7 @@ Callback.Bind('WebInit', function(web, url)
 end)
 
 function Create(subMenuCaption)
-    local values = {
-        Menu = Menu,
-        Boolean = Boolean,
-        Number = Number,
-        Separator = Separator,
-        Section = Section,
-        KeyBinding = KeyBinding
-    }
+    local menu = Menu(subMenuCaption)
 
     Callback.Bind('Unload', function()
         Utility.WriteFile(path .. subMenuCaption .. '.cfg', JSON:encode(values))
@@ -329,21 +257,19 @@ function Create(subMenuCaption)
 
     return setmetatable({}, {
         __call = function(t, children)
-            local menu = Menu(subMenuCaption)(children)
+            table.insert(subMenus, menu(children))
 
-            table.insert(subMenus, menu)
-
-            if Utility.FileExists(path .. subMenuCaption .. '.cfg') then
-                values = table.merge(menu:value(), JSON:decode(Utility.ReadFile(path .. subMenuCaption .. '.cfg')))
-            else
-                values = menu:value()
-            end
+            --if Utility.FileExists(path .. subMenuCaption .. '.cfg') then
+            --    values = table.merge(menu:Value(), JSON:decode(Utility.ReadFile(path .. subMenuCaption .. '.cfg')))
+            --else
+            --    values = menu:value()
+            --end
 
             return t
         end,
 
         __index = function(t, name)
-            return values[name]
+            return menu[name]
         end
     })
 end
@@ -356,13 +282,34 @@ Callback.Bind('Tick', function()
     end
 end)
 
-namespace 'AddonConfig' {
-    Create = Create,
-    Menu = Menu,
-    Boolean = Boolean,
-    Number = Number,
-    Separator = Separator,
-    Section = Section,
-    KeyBinding = KeyBinding,
-    Repaint = Repaint
-}
+class 'AddonConfig' (ConfigContainerElement) -- {
+    AddonConfig.Menu = Menu
+    AddonConfig.Boolean = Boolean
+    AddonConfig.Number = Number
+    AddonConfig.Separator = Separator
+    AddonConfig.Section = Section
+    AddonConfig.KeyBinding = KeyBinding
+    AddonConfig.Repaint = Repaint
+
+    AddonConfig.Caption = property('_caption')
+
+    function AddonConfig:__init(caption)
+        ConfigContainerElement.__init(self)
+
+        self:Caption(caption)
+
+        table.insert(subMenus, self)
+    end
+
+    function AddonConfig:Render(web)
+        local renderResult = '<a href="#" style="border-radius:0px;"><i class="ui-icon fa fa-bars" style="position: absolute;top:5px;left:5px;"></i>' .. self._caption .. '</a><ul>';
+
+        for k, component in ipairs(self:Children()) do
+            renderResult = renderResult .. '<li>' .. component:Render(web) .. '</li>'
+        end
+
+        return renderResult .. '</ul>'
+    end
+-- }
+
+_G.AddonConfig = AddonConfig
