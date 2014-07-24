@@ -6,15 +6,17 @@ local keyBindings = {
     KeyPress = {}
 }
 
-Callback.Bind = function(callbackName, callbackFunction, callbackModifier)
-    if callbackModifier then
-        local bindingTable = keyBindings[callbackName]
+Callback.Bind = function(...)
+    local args = {n = select('#', ...), ...}
+
+    if args.n == 3 and (args[1] == 'KeyDown' or args[1] == 'KeyUp' or args[1] == 'KeyPress') then
+        local bindingTable = keyBindings[args[1]]
 
         if bindingTable then
-            bindingTable[#bindingTable+1] = {keys = Keyboard.StringToKeyCodes(callbackFunction), stringKeys = string.upper(callbackFunction), func = callbackModifier}
+            bindingTable[#bindingTable+1] = {keys = Keyboard.StringToKeyCodes(args[2]), stringKeys = string.upper(args[2]), func = args[3]}
         end
     else
-        Callback_Bind(callbackName, callbackFunction)
+        Callback_Bind(...)
     end
 end
 
