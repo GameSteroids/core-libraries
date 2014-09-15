@@ -43,7 +43,7 @@ namespace 'Utility' {
     DelayAction = DelayAction
 }
 
--- TABLE NAMESPACE ============================================================
+-- TABLE NAMESPACE ===========================================================
 
 function MergeTables(t1, t2)
     for k, v in pairs(t2) do
