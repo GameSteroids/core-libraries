@@ -29,7 +29,7 @@ Callback.Bind('Tick', function()
     end
 end)
 
-DelayAction = function(func, delay, args)
+SetTimeout = function(func, delay, args)
     local t = Core.GetTickCount() + (delay or 0)
 
     if not delayedActions[t] then
@@ -37,10 +37,24 @@ DelayAction = function(func, delay, args)
     end
 
     table.insert(delayedActions[t], {func = func, args = args})
+
+    return {t, #delayedActions[t]}
+end
+
+function ClearTimeout(timeout)
+    if type(timeout) ~= 'table' or #timeout ~= 2 then
+        error('invalid argument "' + type(timeout) + '"', 2)
+    end
+
+    if delayedActions[timeout[1]] and delayedActions[timeout[1]][timeout[2]] then
+        delayedActions[timeout[1]][timeout[2]] = function() end
+    end
 end
 
 namespace 'Utility' {
-    DelayAction = DelayAction
+    DelayAction = SetTimeout,
+    SetTimeout = SetTimeout,
+    ClearTimeout = ClearTimeout
 }
 
 -- TABLE NAMESPACE ===========================================================
