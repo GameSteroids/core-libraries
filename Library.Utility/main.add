@@ -47,7 +47,7 @@ function ClearTimeout(timeout)
     end
 
     if delayedActions[timeout[1]] and delayedActions[timeout[1]][timeout[2]] then
-        delayedActions[timeout[1]][timeout[2]] = function() end
+        delayedActions[timeout[1]][timeout[2]] = {func = function() end, args = {}}
     end
 end
 
